@@ -102,7 +102,7 @@ def read_cache():
         with open(CACHE_FILE, 'r') as f:
             cache_data = json.load(f)
             return cache_data.get('release_notes', []), cache_data.get('last_updated', 'Unknown')
-    return []
+    return [], 'Unknown'
 
 @app.route('/')
 def index():
