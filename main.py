@@ -7,7 +7,7 @@ import os
 
 app = Flask(__name__)
 
-CACHE_FILE = 'release_notes_cache.json'
+CACHE_FILE = './tmp/release_notes_cache.json'
 
 def get_latest_release(repo):
     """
@@ -127,3 +127,4 @@ if __name__ == "__main__":
     if not os.path.exists(CACHE_FILE):
         update_cache()
     # app.run(debug=True)
+    app.run()
