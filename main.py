@@ -85,8 +85,11 @@ def update_cache():
         'last_updated': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'release_notes': release_notes
     }
-    with open(CACHE_FILE, 'w') as f:
-        json.dump(cache_data, f)
+    try:
+        with open(CACHE_FILE, 'w') as f:
+            json.dump(cache_data, f)
+    except IOError as e:
+        print(f"Error writing to cache file: {e}")
 
 def read_cache():
     """
