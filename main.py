@@ -4,10 +4,17 @@ import markdown
 import requests
 from datetime import datetime
 import os
+import argparse
 
 app = Flask(__name__)
 
-CACHE_FILE = './tmp/release_notes_cache.json'
+# Set up argument parsing
+parser = argparse.ArgumentParser(description='Release Notes Cache Directory')
+parser.add_argument('--cache-dir', type=str, required=True, help='Directory to store cache files')
+args = parser.parse_args()
+
+# Use the provided cache directory to set CACHE_FILE
+CACHE_FILE = os.path.join(args.cache_dir, 'release_notes_cache.json')
 
 def get_latest_release(repo):
     """
@@ -44,7 +51,6 @@ def extract_release_notes(repo):
         body_html = markdown.markdown(body)
         published_date = datetime.strptime(published_at, '%Y-%m-%dT%H:%M:%SZ')
         age_in_days = (datetime.utcnow() - published_date).days
-        # print(f"Repo: {repo}, Age in days: {age_in_days}")  # Debug print 
         return {
             'repo': repo,
             'version': version,
@@ -129,5 +135,4 @@ def update():
 if __name__ == "__main__":
     if not os.path.exists(CACHE_FILE):
         update_cache()
-    # app.run(debug=True)
     app.run()
