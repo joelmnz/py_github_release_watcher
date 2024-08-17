@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 5000
 
 # Command to run the application with the --cache-dir argument
-CMD ["python", "main.py", "--cache-dir", "/app_data"]
+CMD ["python", "main.py"]

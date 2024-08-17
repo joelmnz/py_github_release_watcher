@@ -2,10 +2,17 @@
 
 # Example usage: ./deploy.sh 8080
 
+# Check if the PORT argument is supplied
+if [ -z "$1" ]; then
+    echo "Error: You must specify a PORT."
+    echo "Usage: $0 <port>"
+    exit 1
+fi
+
 # Define variables
-APP_NAME="my_flask_app"
-DOCKER_IMAGE_NAME="${APP_NAME}_image"  # Append "_image" to APP_NAME
-DOCKER_CONTAINER_NAME="${APP_NAME}_container"  # Append "_container" to APP_NAME
+APP_NAME="py_github_release_watcher"
+DOCKER_IMAGE_NAME="${APP_NAME}_image"
+DOCKER_CONTAINER_NAME="${APP_NAME}"
 APP_DATA_VOLUME_NAME="${APP_NAME}_data"  # Volume name for app data
 PORT=${1:-5000}  # Use the first argument as the port, default to 5000 if not provided
 
@@ -28,6 +35,7 @@ fi
 
 # Run the Docker container with volume mapping
 echo "Running the Docker container on port $PORT..."
-docker run -d -p $PORT:5000 --name $DOCKER_CONTAINER_NAME -v $APP_DATA_VOLUME_NAME:/app_data $DOCKER_IMAGE_NAME
+#docker run -d -p $PORT:5000 --name $DOCKER_CONTAINER_NAME -v $APP_DATA_VOLUME_NAME:/app_data $DOCKER_IMAGE_NAME
+docker run -d -p $PORT:5000 --name $DOCKER_CONTAINER_NAME -v $APP_DATA_VOLUME_NAME:/app_data -e CACHE_DIR=/app_data $DOCKER_IMAGE_NAME
 
-echo "Flask app is deployed and running at http://localhost:$PORT"
+echo "App deployed and running at http://localhost:$PORT"

@@ -4,17 +4,12 @@ import markdown
 import requests
 from datetime import datetime
 import os
-import argparse
 
 app = Flask(__name__)
 
-# Set up argument parsing
-parser = argparse.ArgumentParser(description='Release Notes Cache Directory')
-parser.add_argument('--cache-dir', type=str, required=True, help='Directory to store cache files')
-args = parser.parse_args()
-
-# Use the provided cache directory to set CACHE_FILE
-CACHE_FILE = os.path.join(args.cache_dir, 'release_notes_cache.json')
+# Read the cache directory from an environment variable
+CACHE_DIR = os.environ.get('CACHE_DIR', '.')
+CACHE_FILE = os.path.join(CACHE_DIR, 'release_notes_cache.json')
 
 def get_latest_release(repo):
     """
@@ -135,4 +130,5 @@ def update():
 if __name__ == "__main__":
     if not os.path.exists(CACHE_FILE):
         update_cache()
-    app.run()
+    #app.run()
+    app.run(host='0.0.0.0')
