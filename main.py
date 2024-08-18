@@ -102,7 +102,14 @@ def read_cache():
     if os.path.exists(CACHE_FILE):
         with open(CACHE_FILE, 'r') as f:
             cache_data = json.load(f)
-            return cache_data.get('release_notes', []), cache_data.get('last_updated', 'Unknown')
+            release_notes = cache_data.get('release_notes', [])
+            
+            # Recalculate age_in_days based on the current date
+            for note in release_notes:
+                published_date = datetime.strptime(note['published_at'], '%Y-%m-%dT%H:%M:%SZ')
+                note['age_in_days'] = (datetime.utcnow() - published_date).days
+            
+            return release_notes, cache_data.get('last_updated', 'Unknown')
     return [], 'Unknown'
 
 @app.route('/')
@@ -130,5 +137,4 @@ def update():
 if __name__ == "__main__":
     if not os.path.exists(CACHE_FILE):
         update_cache()
-    #app.run()
     app.run(host='0.0.0.0')
