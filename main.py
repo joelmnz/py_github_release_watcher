@@ -2,7 +2,8 @@ import json
 from flask import Flask, render_template, request, redirect, url_for
 import markdown
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
+
 import os
 
 app = Flask(__name__)
@@ -108,9 +109,44 @@ def read_cache():
             for note in release_notes:
                 published_date = datetime.strptime(note['published_at'], '%Y-%m-%dT%H:%M:%SZ')
                 note['age_in_days'] = (datetime.utcnow() - published_date).days
+                #note['age_in_days'] = calculate_age_in_days(published_date)
             
             return release_notes, cache_data.get('last_updated', 'Unknown')
     return [], 'Unknown'
+
+def calculate_age_in_days(date_string):
+    """
+    Calculate how old a given date is and return a formatted string.
+
+    Args:
+        date_string (str): The date string in the format 'YYYY-MM-DD HH:MM:SS'.
+
+    Returns:
+        str: Formatted string indicating the date and how many days ago it was.
+    """
+    # Parse the date string into a datetime object
+    date_dt = datetime.strptime(date_string, '%Y-%m-%d %H:%M:%S')
+    
+    # Get the current time
+    now = datetime.now()
+    
+    # Calculate the difference
+    time_difference = now - date_dt
+    
+    # Format the date
+    formatted_date = date_dt.strftime('%Y-%m-%d %I:%M %p')
+    
+    # Determine how many days ago it was updated
+    days_ago = time_difference.days
+    if days_ago == 0:
+        time_ago = "today"
+    elif days_ago == 1:
+        time_ago = "1 day ago"
+    else:
+        time_ago = f"{days_ago} days ago"
+    
+    # Combine the formatted date with the time ago
+    return f"{formatted_date} ({time_ago})"
 
 @app.route('/')
 def index():
@@ -121,7 +157,11 @@ def index():
         str: The rendered HTML of the index page.
     """
     release_notes, last_updated = read_cache()
-    return render_template('index.html', release_notes=release_notes, last_updated=last_updated)
+    
+    # Use the calculate_age_in_days function to format the last_updated
+    display_last_updated = calculate_age_in_days(last_updated)
+    
+    return render_template('index.html', release_notes=release_notes, last_updated=display_last_updated)
 
 @app.route('/update', methods=['POST'])
 def update():
