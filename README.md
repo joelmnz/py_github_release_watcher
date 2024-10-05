@@ -20,7 +20,9 @@ This is a client-side web application that allows you to watch and display the l
 
 ## Deployment
 
-This application can be easily deployed using GitHub Pages:
+This application can be easily deployed using GitHub Pages or any static file hosting service:
+
+### GitHub Pages
 
 1. Fork this repository or create a new one and add the `index.html` file.
 2. Go to your repository settings on GitHub.
@@ -30,13 +32,17 @@ This application can be easily deployed using GitHub Pages:
 
 Your application will now be available at `https://your-username.github.io/your-repo-name/`.
 
+### Other Static Hosting
+
+Simply upload the `index.html` file to any web server or static file hosting service of your choice.
+
 ## Development
 
 To make changes to the application:
 
 1. Edit the `index.html` file.
 2. Test locally by opening the file in a web browser.
-3. Commit and push your changes to GitHub if you're using GitHub Pages for deployment.
+3. If using GitHub Pages, commit and push your changes to deploy.
 
 ## Limitations
 
