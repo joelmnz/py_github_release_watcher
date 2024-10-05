@@ -1,19 +1,13 @@
 import json
 import logging
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, jsonify
 import markdown
 import requests
-from datetime import datetime, timedelta
-
-import os
+from datetime import datetime
 
 app = Flask(__name__)
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
-# Read the cache directory from an environment variable
-CACHE_DIR = os.environ.get('CACHE_DIR', '.')
-CACHE_FILE = os.path.join(CACHE_DIR, 'release_notes_cache.json')
 
 def get_latest_release(repo):
     """
@@ -98,34 +92,22 @@ def update_cache(repos):
         'last_updated': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'release_notes': release_notes
     }
-    try:
-        with open(CACHE_FILE, 'w') as f:
-            json.dump(cache_data, f)
-        logging.info(f"Successfully wrote cache to {CACHE_FILE}")
-    except IOError as e:
-        logging.error(f"Error writing to cache file: {e}")
     
     logging.info("Cache update completed")
+    return cache_data
 
-def read_cache():
+def read_cache(cache_data):
     """
-    Read the cached release notes from the cache file.
-
-    Returns:
-        tuple: A tuple containing a list of release notes and the last updated timestamp.
+    Process the cached release notes.
     """
-    if os.path.exists(CACHE_FILE):
-        with open(CACHE_FILE, 'r') as f:
-            cache_data = json.load(f)
-            release_notes = cache_data.get('release_notes', [])
-            
-            # Recalculate age_in_days based on the current date
-            for note in release_notes:
-                published_date = datetime.strptime(note['published_at'], '%Y-%m-%dT%H:%M:%SZ')
-                note['age_in_days'] = (datetime.utcnow() - published_date).days
-            
-            return release_notes, cache_data.get('last_updated', 'Unknown')
-    return [], 'Unknown'
+    release_notes = cache_data.get('release_notes', [])
+    
+    # Recalculate age_in_days based on the current date
+    for note in release_notes:
+        published_date = datetime.strptime(note['published_at'], '%Y-%m-%dT%H:%M:%SZ')
+        note['age_in_days'] = (datetime.utcnow() - published_date).days
+    
+    return release_notes, cache_data.get('last_updated', 'Unknown')
 
 def calculate_age_in_days(date_string):
     """
@@ -165,13 +147,11 @@ def calculate_age_in_days(date_string):
 def index():
     """
     Render the index page with the cached release notes.
-
-    Returns:
-        str: The rendered HTML of the index page.
     """
-    release_notes, last_updated = read_cache()
+    cache_data = request.args.get('cache', '{}')
+    cache_data = json.loads(cache_data)
+    release_notes, last_updated = read_cache(cache_data)
     
-    # Use the calculate_age_in_days function to format the last_updated
     display_last_updated = calculate_age_in_days(last_updated)
     
     return render_template('index.html', release_notes=release_notes, last_updated=display_last_updated)
@@ -179,16 +159,13 @@ def index():
 @app.route('/update', methods=['POST'])
 def update():
     """
-    Update the cache and redirect to the index page.
-
-    Returns:
-        werkzeug.wrappers.Response: A redirect response to the index page.
+    Update the cache and return the new cache data.
     """
     logging.info("Update request received")
     repos = get_repos_from_request()
-    update_cache(repos)
-    logging.info("Update completed, redirecting to index")
-    return jsonify({"status": "success"})
+    new_cache_data = update_cache(repos)
+    logging.info("Update completed")
+    return jsonify(new_cache_data)
 
 @app.route('/settings')
 def settings():

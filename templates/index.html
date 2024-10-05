@@ -91,11 +91,26 @@
         document.addEventListener("DOMContentLoaded", function() {
             document.getElementById("loading-message").style.display = "none";
             document.getElementById("content").style.display = "block";
+            sendCachedDataToServer();
         });
 
         function getWatchedRepos() {
             const repos = localStorage.getItem('watchedRepos') || '';
             return repos.split('\n').filter(repo => repo.trim() !== '');
+        }
+
+        function saveCache(cacheData) {
+            localStorage.setItem('releaseNotesCache', JSON.stringify(cacheData));
+        }
+
+        function loadCache() {
+            return JSON.parse(localStorage.getItem('releaseNotesCache') || '{}');
+        }
+
+        function sendCachedDataToServer() {
+            const cachedData = loadCache();
+            const queryString = new URLSearchParams({cache: JSON.stringify(cachedData)}).toString();
+            window.location.search = queryString;
         }
 
         function handleUpdate() {
@@ -113,14 +128,8 @@
                 body: JSON.stringify({ repos: repos }),
             }).then(response => response.json())
               .then(data => {
-                  if (data.status === 'success') {
-                      window.location.reload();
-                  } else {
-                      alert('Update failed. Please try again.');
-                      button.classList.remove('loading');
-                      button.disabled = false;
-                      button.textContent = 'Check for Updates';
-                  }
+                  saveCache(data);
+                  sendCachedDataToServer();
               })
               .catch(error => {
                   console.error('Error:', error);
