@@ -71,9 +71,8 @@
     <div id="loading-message">Loading...</div>
     <div id="content" style="display: none;">
     <p>Last updated: {{ last_updated }}</p>
-    <form id="update-form" action="{{ url_for('update') }}" method="post" onsubmit="handleUpdate()">
-        <button type="submit" class="update-button">Check for Updates</button>
-    </form>
+    <button onclick="handleUpdate()" class="update-button">Check for Updates</button>
+    <p><a href="{{ url_for('settings') }}">Settings</a></p>
     <h2>Table of Contents</h2>
     <ul class="toc">
         {% for release in release_notes %}
@@ -93,12 +92,44 @@
             document.getElementById("loading-message").style.display = "none";
             document.getElementById("content").style.display = "block";
         });
-    function handleUpdate() {
-        const button = document.querySelector('.update-button');
-        button.classList.add('loading');
-        button.disabled = true;
-        button.textContent = 'Updating';
-    }
-</script>
+
+        function getWatchedRepos() {
+            const repos = localStorage.getItem('watchedRepos') || '';
+            return repos.split('\n').filter(repo => repo.trim() !== '');
+        }
+
+        function handleUpdate() {
+            const button = document.querySelector('.update-button');
+            button.classList.add('loading');
+            button.disabled = true;
+            button.textContent = 'Updating';
+
+            const repos = getWatchedRepos();
+            fetch('/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ repos: repos }),
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.status === 'success') {
+                      window.location.reload();
+                  } else {
+                      alert('Update failed. Please try again.');
+                      button.classList.remove('loading');
+                      button.disabled = false;
+                      button.textContent = 'Check for Updates';
+                  }
+              })
+              .catch(error => {
+                  console.error('Error:', error);
+                  alert('An error occurred. Please try again.');
+                  button.classList.remove('loading');
+                  button.disabled = false;
+                  button.textContent = 'Check for Updates';
+              });
+        }
+    </script>
 </body>
 </html>

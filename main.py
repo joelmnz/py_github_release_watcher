@@ -1,6 +1,6 @@
 import json
 import logging
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 import markdown
 import requests
 from datetime import datetime, timedelta
@@ -63,26 +63,22 @@ def extract_release_notes(repo):
         logging.warning(f"Failed to fetch latest release for {repo}")
         return None
 
-def read_repos_from_file(filename):
+def get_repos_from_request():
     """
-    Read a list of repositories from a file.
-
-    Args:
-        filename (str): The path to the file containing the list of repositories.
+    Get the list of repositories from the request JSON data.
 
     Returns:
         list: A list of repository names.
     """
-    with open(filename, 'r') as file:
-        return [line.strip() for line in file if line.strip() and not line.strip().startswith('#')]
+    data = request.get_json()
+    return data.get('repos', [])
 
-def update_cache():
+def update_cache(repos):
     """
     Update the cache with the latest release notes for all watched repositories.
     """
     logging.info("Starting cache update")
-    repos = read_repos_from_file('watched_repos.txt')
-    logging.info(f"Read {len(repos)} repositories from watched_repos.txt")
+    logging.info(f"Received {len(repos)} repositories")
     
     release_notes = []
     for repo in repos:
@@ -127,7 +123,6 @@ def read_cache():
             for note in release_notes:
                 published_date = datetime.strptime(note['published_at'], '%Y-%m-%dT%H:%M:%SZ')
                 note['age_in_days'] = (datetime.utcnow() - published_date).days
-                #note['age_in_days'] = calculate_age_in_days(published_date)
             
             return release_notes, cache_data.get('last_updated', 'Unknown')
     return [], 'Unknown'
@@ -190,11 +185,20 @@ def update():
         werkzeug.wrappers.Response: A redirect response to the index page.
     """
     logging.info("Update request received")
-    update_cache()
+    repos = get_repos_from_request()
+    update_cache(repos)
     logging.info("Update completed, redirecting to index")
-    return redirect(url_for('index'))
+    return jsonify({"status": "success"})
+
+@app.route('/settings')
+def settings():
+    """
+    Render the settings page.
+
+    Returns:
+        str: The rendered HTML of the settings page.
+    """
+    return render_template('settings.html')
 
 if __name__ == "__main__":
-    if not os.path.exists(CACHE_FILE):
-        update_cache()
     app.run(host='0.0.0.0')

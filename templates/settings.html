@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - GitHub Release Notes</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            line-height: 1.6; 
+            padding: 20px; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background-color: #121212; 
+            color: #e0e0e0; 
+        }
+        h1 { color: #ffffff; }
+        h2 { color: #bb86fc; }
+        textarea {
+            width: 100%;
+            height: 200px;
+            background-color: #1e1e1e;
+            color: #e0e0e0;
+            border: 1px solid #333;
+            padding: 10px;
+        }
+        .save-button {
+            background-color: #bb86fc;
+            color: #121212;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .save-button:hover {
+            background-color: #3700b3;
+        }
+        a { color: #bb86fc; }
+    </style>
+</head>
+<body>
+    <h1>Settings</h1>
+    <h2>Watched Repositories</h2>
+    <p>Enter one repository per line in the format "owner/repo":</p>
+    <textarea id="repos-list"></textarea>
+    <br>
+    <button class="save-button" onclick="saveRepos()">Save</button>
+    <p id="save-message"></p>
+    <p><a href="/">Back to Release Notes</a></p>
+
+    <script>
+        function loadRepos() {
+            const repos = localStorage.getItem('watchedRepos') || '';
+            document.getElementById('repos-list').value = repos;
+        }
+
+        function saveRepos() {
+            const repos = document.getElementById('repos-list').value;
+            localStorage.setItem('watchedRepos', repos);
+            document.getElementById('save-message').textContent = 'Saved successfully!';
+            setTimeout(() => {
+                document.getElementById('save-message').textContent = '';
+            }, 3000);
+        }
+
+        loadRepos();
+    </script>
+</body>
+</html>
