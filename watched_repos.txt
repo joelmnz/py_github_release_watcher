@@ -1,6 +1,0 @@
-open-webui/open-webui
-ollama/ollama
-enricoros/big-AGI
-MudBlazor/MudBlazor
-paul-gauthier/aider
-FlowiseAI/Flowise
