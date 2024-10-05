@@ -129,6 +129,9 @@
             }).then(response => response.json())
               .then(data => {
                   saveCache(data);
+                  if (data.failed_repos && data.failed_repos.length > 0) {
+                      alert(`Failed to update the following repositories:\n${data.failed_repos.join('\n')}`);
+                  }
                   sendCachedDataToServer();
               })
               .catch(error => {

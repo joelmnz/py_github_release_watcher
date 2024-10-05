@@ -75,22 +75,31 @@ def update_cache(repos):
     logging.info(f"Received {len(repos)} repositories")
     
     release_notes = []
+    failed_repos = []
     for repo in repos:
-        logging.info(f"Fetching release notes for {repo}")
-        notes = extract_release_notes(repo)
-        if notes:
-            release_notes.append(notes)
-            logging.info(f"Successfully fetched release notes for {repo}")
-        else:
-            logging.warning(f"Failed to fetch release notes for {repo}")
+        try:
+            logging.info(f"Fetching release notes for {repo}")
+            notes = extract_release_notes(repo)
+            if notes:
+                release_notes.append(notes)
+                logging.info(f"Successfully fetched release notes for {repo}")
+            else:
+                logging.warning(f"No release notes found for {repo}")
+                failed_repos.append(repo)
+        except Exception as e:
+            logging.error(f"Error fetching release notes for {repo}: {str(e)}")
+            failed_repos.append(repo)
     
     logging.info(f"Fetched release notes for {len(release_notes)} out of {len(repos)} repositories")
+    if failed_repos:
+        logging.warning(f"Failed to fetch release notes for: {', '.join(failed_repos)}")
     
     release_notes.sort(key=lambda x: x['published_at'], reverse=True)
     
     cache_data = {
         'last_updated': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        'release_notes': release_notes
+        'release_notes': release_notes,
+        'failed_repos': failed_repos
     }
     
     logging.info("Cache update completed")
