@@ -1,4 +1,5 @@
 import json
+import logging
 from flask import Flask, render_template, request, redirect, url_for
 import markdown
 import requests
@@ -7,6 +8,8 @@ from datetime import datetime, timedelta
 import os
 
 app = Flask(__name__)
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Read the cache directory from an environment variable
 CACHE_DIR = os.environ.get('CACHE_DIR', '.')
@@ -39,8 +42,10 @@ def extract_release_notes(repo):
     Returns:
         dict: A dictionary containing the release notes, version, and other metadata if successful, None otherwise.
     """
+    logging.info(f"Fetching latest release for {repo}")
     release = get_latest_release(repo)
     if release:
+        logging.info(f"Successfully fetched latest release for {repo}")
         version = release['tag_name']
         body = release['body']
         published_at = release['published_at']
@@ -55,6 +60,7 @@ def extract_release_notes(repo):
             'age_in_days': age_in_days,
         }
     else:
+        logging.warning(f"Failed to fetch latest release for {repo}")
         return None
 
 def read_repos_from_file(filename):
@@ -74,12 +80,21 @@ def update_cache():
     """
     Update the cache with the latest release notes for all watched repositories.
     """
+    logging.info("Starting cache update")
     repos = read_repos_from_file('watched_repos.txt')
+    logging.info(f"Read {len(repos)} repositories from watched_repos.txt")
+    
     release_notes = []
     for repo in repos:
+        logging.info(f"Fetching release notes for {repo}")
         notes = extract_release_notes(repo)
         if notes:
             release_notes.append(notes)
+            logging.info(f"Successfully fetched release notes for {repo}")
+        else:
+            logging.warning(f"Failed to fetch release notes for {repo}")
+    
+    logging.info(f"Fetched release notes for {len(release_notes)} out of {len(repos)} repositories")
     
     release_notes.sort(key=lambda x: x['published_at'], reverse=True)
     
@@ -90,8 +105,11 @@ def update_cache():
     try:
         with open(CACHE_FILE, 'w') as f:
             json.dump(cache_data, f)
+        logging.info(f"Successfully wrote cache to {CACHE_FILE}")
     except IOError as e:
-        print(f"Error writing to cache file: {e}")
+        logging.error(f"Error writing to cache file: {e}")
+    
+    logging.info("Cache update completed")
 
 def read_cache():
     """
@@ -171,7 +189,9 @@ def update():
     Returns:
         werkzeug.wrappers.Response: A redirect response to the index page.
     """
+    logging.info("Update request received")
     update_cache()
+    logging.info("Update completed, redirecting to index")
     return redirect(url_for('index'))
 
 if __name__ == "__main__":
